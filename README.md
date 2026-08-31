@@ -1,34 +1,68 @@
 # Zcashorg
 
-Zcash-native org and treasury dapp — create shielded ZEC groups for family, business, investment clubs, and community treasuries. Planned as one of the first dapps for [NozyWallet](https://github.com/LEONINE-DAO/Nozy-wallet).
+Zcash-native org/DAO dapp — shielded ZEC funds with governance on **Hybrid C** (zk-CosmWasm + coordinator + NozyWallet).
 
-## Status
+## Quick start
 
-**Planning phase.** Hybrid C architecture recommended: zk-CosmWasm governance + coordinator UX + NozyWallet for shielded ZEC. See [docs/plans/ARCHITECTURE.md](docs/plans/ARCHITECTURE.md).
+```bash
+# Install dependencies
+npm install
+
+# Start Postgres + coordinator + indexer
+docker compose up -d postgres
+npm run migrate -w @zcashorg/coordinator
+npm run dev:coordinator
+
+# Web dapp (separate terminal)
+npm run dev:web
+```
+
+- Coordinator: http://localhost:8787
+- Web UI: http://localhost:3001
+- Indexer stub: http://localhost:8788
+
+Or one command:
+
+```bash
+docker compose up --build
+```
+
+## Monorepo layout
+
+```
+packages/schema/     JSON Schema + TypeScript domain types
+packages/sdk/          CoordinatorBackend + HybridBackend
+services/coordinator/  Postgres REST /v1 API
+services/indexer/      CosmWasm event stub
+contracts/zcashorg/    zk-CosmWasm governance (Phase 1b)
+apps/web/              Next.js dapp
+docs/plans/            Architecture, data model, constitution
+```
 
 ## Planning docs
 
-| Document | Description |
-|----------|-------------|
-| [docs/plans/README.md](docs/plans/README.md) | Index of all planning artifacts |
-| [docs/plans/DATA_MODEL.md](docs/plans/DATA_MODEL.md) | Domain entities and relationships |
-| [docs/plans/ARCHITECTURE.md](docs/plans/ARCHITECTURE.md) | Hybrid C: zk-CosmWasm + coordinator + Nozy |
-| [docs/plans/OPEN_DECISIONS.md](docs/plans/OPEN_DECISIONS.md) | Unresolved choices and blockers |
-| [docs/plans/ROADMAP.md](docs/plans/ROADMAP.md) | Phased delivery plan |
-| [docs/plans/GLEYO_INTEGRATION.md](docs/plans/GLEYO_INTEGRATION.md) | Gleyo quest/payout ecosystem link |
+- [Architecture](./docs/plans/ARCHITECTURE.md) — Hybrid C locked
+- [Data model](./docs/plans/DATA_MODEL.md)
+- [Open decisions](./docs/plans/OPEN_DECISIONS.md) — OD-001, OD-008
+- [Constitution](./docs/plans/CONSTITUTION.md)
+- [Token strategy](./docs/plans/TOKEN_STRATEGY.md) — no platform token at launch
+- [Nozy integration](./docs/NOZY_INTEGRATION.md)
 
-## Product goals
+## API (coordinator `/v1`)
 
-- Create orgs / funds with configurable governance (quorum, thresholds, voting periods)
-- Invite members and assign roles
-- Propose and vote on treasury actions, policy, and membership
-- Integrate with NozyWallet for shielded identity and (later) spend execution
-- Optional Crosslink staking policies once mainnet ships
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/v1/funds` | — |
+| GET | `/v1/funds/:slug` | — |
+| POST | `/v1/funds/:fundId/invites` | Fund API key |
+| POST | `/v1/invites/:token/accept` | — |
+| POST | `/v1/funds/:fundId/proposals` | Fund API key |
+| POST | `/v1/proposals/:id/votes` | — |
+| POST | `/v1/proposals/:id/finalize` | Fund API key |
+| POST | `/v1/proposals/:id/execute` | Fund API key |
 
-## Contributing
-
-Open an issue before large or behavior-changing work. Disclose AI assistance in PR descriptions.
+Fund API key is returned once on fund create — store in browser session for admin actions.
 
 ## License
 
-TBD
+See repository license. AI-assisted implementation — human authors responsible for correctness.

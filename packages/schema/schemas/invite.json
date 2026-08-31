@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zcashorg.dev/schema/invite.json",
+  "title": "Invite",
+  "type": "object",
+  "required": ["id", "fund_id", "role", "token_hash", "expires_at", "status"],
+  "properties": {
+    "id": { "type": "string" },
+    "fund_id": { "type": "string" },
+    "role": {
+      "enum": ["owner", "admin", "member", "auditor", "viewer"]
+    },
+    "token_hash": { "type": "string" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "accepted_by_member_id": { "type": "string" },
+    "status": { "enum": ["open", "accepted", "expired", "revoked"] }
+  },
+  "additionalProperties": false
+}

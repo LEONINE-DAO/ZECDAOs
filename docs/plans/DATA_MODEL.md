@@ -46,6 +46,9 @@ Org / DAO / family group.
 | `gleyo_community_id` | string | no | Linked Gleyo community |
 | `gleyo_community_url` | string | no | |
 | `gleyo_linked_at` | datetime | no | |
+| `constitution_hash` | string | no | keccak256 per-fund constitution |
+| `constitution_text_uri` | string | no | Canonical markdown URI |
+| `platform_charter_version` | string | no | Platform charter semver |
 | `created_by_member_id` | string | yes | Bootstrap member |
 | `created_at` | datetime | yes | |
 | `updated_at` | datetime | yes | |
@@ -65,6 +68,7 @@ One per fund. DAO DAO–style parameters.
 | `min_voters` | u32 | null | Optional floor |
 | `proposal_policy` | enum | `any_member` | `any_member`, `admins_only`, `owners_only` |
 | `allow_abstain` | bool | true | |
+| `execution_delay_secs` | u32 | 0 | Timelock after pass before execute |
 | `voting_power_mode` | enum | `one_member_one_vote` | Extend for stake-weighted later |
 
 **Note:** Crosslink network staking is **not** voting power in Phase 0.
@@ -77,7 +81,8 @@ One per fund. DAO DAO–style parameters.
 |-------|------|----------|-------|
 | `id` | string | yes | |
 | `fund_id` | string | yes | FK |
-| `orchard_ua` | string | yes | Nozy-connected unified address (`u1…`) |
+| `orchard_ua` | string | yes | Deprecated alias — use `shielded_ua` |
+| `shielded_ua` | string | yes | Nozy-connected unified address (`u1…`, Ironwood) |
 | `display_name` | string | yes | |
 | `role` | enum | yes | `owner`, `admin`, `member`, `auditor`, `viewer` |
 | `status` | enum | yes | `pending`, `active`, `removed` |
@@ -85,9 +90,10 @@ One per fund. DAO DAO–style parameters.
 | `invited_by` | string | no | Member id |
 | `on_chain_member_id` | string | no | CosmWasm member record id |
 | `member_commitment` | string | no | Hash of UA + fund (on-chain; full UA may stay off explorer) |
+| `private_ordering_ack` | bool | no | Accepted platform + fund constitution at join |
 | `joined_at` | datetime | no | |
 
-**Uniqueness:** `(fund_id, orchard_ua)` where `status != removed`.
+**Uniqueness:** `(fund_id, shielded_ua)` where `status != removed`.
 
 ### Roles
 

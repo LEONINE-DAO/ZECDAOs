@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zcashorg.dev/schema/fund-event.json",
+  "title": "FundEvent",
+  "type": "object",
+  "required": [
+    "id",
+    "fund_id",
+    "event_type",
+    "entity_type",
+    "entity_id",
+    "payload",
+    "created_at"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "fund_id": { "type": "string" },
+    "event_type": { "type": "string" },
+    "actor_member_id": { "type": "string" },
+    "entity_type": { "type": "string" },
+    "entity_id": { "type": "string" },
+    "payload": { "type": "object" },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

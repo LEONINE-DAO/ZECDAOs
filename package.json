@@ -1,0 +1,19 @@
+{
+  "name": "zcashorg",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "dev:coordinator": "npm run dev -w @zcashorg/coordinator",
+    "dev:web": "npm run dev -w @zcashorg/web",
+    "migrate": "npm run migrate -w @zcashorg/coordinator",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

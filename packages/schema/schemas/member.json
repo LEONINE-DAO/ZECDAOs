@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zcashorg.dev/schema/member.json",
+  "title": "Member",
+  "type": "object",
+  "required": [
+    "id",
+    "fund_id",
+    "orchard_ua",
+    "shielded_ua",
+    "display_name",
+    "role",
+    "status",
+    "voting_power"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "fund_id": { "type": "string" },
+    "orchard_ua": { "type": "string" },
+    "shielded_ua": { "type": "string" },
+    "display_name": { "type": "string" },
+    "role": {
+      "enum": ["owner", "admin", "member", "auditor", "viewer"]
+    },
+    "status": { "enum": ["pending", "active", "removed"] },
+    "voting_power": { "type": "integer", "minimum": 0 },
+    "invited_by": { "type": "string" },
+    "on_chain_member_id": { "type": "string" },
+    "member_commitment": { "type": "string" },
+    "private_ordering_ack": { "type": "boolean" },
+    "joined_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

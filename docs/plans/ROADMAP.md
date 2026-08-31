@@ -16,42 +16,39 @@
 
 ---
 
-## Phase 0a — Planning (current)
+## Phase 0a — Planning
 
 - [x] Bootstrap repo with planning docs
 - [x] Define portable data model
-- [x] OD-001 recommendation (Hybrid C + zk-CosmWasm)
+- [x] OD-001 lock (Hybrid C + zk-CosmWasm, Proof VM devnet provisional)
 - [x] Gleyo ecosystem integration doc
-- [ ] Confirm OD-001 companion chain + ZK scope
-- [ ] Add `packages/schema` JSON Schema
+- [x] Constitution + token strategy docs
+- [x] `packages/schema` JSON Schema + TypeScript
+
+## Phase 0–1 — Coordinator MVP (shipped)
+
+- [x] Postgres migrations
+- [x] REST `/v1`
+- [x] Nozy extension connect (web)
+- [x] Proposal/vote UI (coordinator tally interim)
+- [x] docker-compose self-host
 
 ---
 
-## Phase 0–1 — Coordinator MVP
+## Phase 1b — zk-CosmWasm (initial)
 
-Ship fast while contracts are in development. Coordinator is **not** sole source of truth for governance once Phase 1b lands.
-
-- Postgres migrations
-- REST `/v1` (metadata, invites, feeds, treasury cache)
-- Nozy extension connect
-- Proposal/vote UI (coordinator tally until contract indexer)
+- [x] Contract scaffold (`contracts/zcashorg`)
+- [x] Indexer stub
+- [ ] Deploy to Proof VM devnet
+- [ ] Wire HybridBackend on-chain sync
 
 ---
 
-## Phase 1b — zk-CosmWasm
+## Phase 2 — Web dapp (initial)
 
-- Deploy contracts to testnet (companion chain TBD)
-- Fund registry, member commitments, proposal lifecycle, vote tally
-- Indexer → domain model
-- ZK eligibility proofs (vote-sdk patterns) or signed attestations
-
----
-
-## Phase 2 — Web dapp
-
-- Next.js `apps/web`
-- `HybridBackend` adapter
-- Public fund page (outcomes without full payment graph)
+- [x] Next.js `apps/web`
+- [x] `HybridBackend` adapter
+- [ ] Public fund page polish
 
 ---
 

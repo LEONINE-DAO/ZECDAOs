@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zcashorg.dev/schema/fund.json",
+  "title": "Fund",
+  "type": "object",
+  "required": [
+    "id",
+    "slug",
+    "display_name",
+    "fund_type",
+    "status",
+    "network",
+    "created_by_member_id",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "display_name": { "type": "string", "minLength": 1 },
+    "fund_type": {
+      "enum": ["family", "business", "investment_club", "community"]
+    },
+    "description": { "type": "string" },
+    "status": { "enum": ["active", "archived"] },
+    "zns_name": { "type": "string" },
+    "network": { "enum": ["mainnet", "testnet"] },
+    "on_chain_id": { "type": "string" },
+    "constitution_hash": { "type": "string" },
+    "constitution_text_uri": { "type": "string" },
+    "constitution_amended_at": { "type": "string", "format": "date-time" },
+    "platform_charter_version": { "type": "string" },
+    "gleyo_community_id": { "type": "string" },
+    "gleyo_community_url": { "type": "string" },
+    "gleyo_linked_at": { "type": "string", "format": "date-time" },
+    "created_by_member_id": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

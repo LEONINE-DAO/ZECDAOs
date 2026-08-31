@@ -1,6 +1,6 @@
 # NozyWallet integration
 
-**Status:** Draft — connect flow is stable; attestations and spend execution are phased.
+**Status:** **Locked — Hybrid C** (zk-CosmWasm + coordinator + Nozy). **Ironwood-only** shielded sends.
 
 Zcashorg is a **standalone dapp** that uses NozyWallet as the wallet surface. It does not embed wallet logic and does not require changes to the Nozy-wallet core repo for Phase 0.
 
@@ -25,7 +25,7 @@ const accounts = await provider.request({ method: "eth_requestAccounts" });
 const chainId = await provider.request({ method: "eth_chainId" }); // "0x5ba3" mainnet
 ```
 
-Bind `accounts[0]` to `Member.orchard_ua` when accepting invites or creating a fund.
+Bind `accounts[0]` to `Member.shielded_ua` (alias `orchard_ua` in schema) when accepting invites or creating a fund.
 
 ### Provider methods (today)
 
@@ -84,9 +84,10 @@ Reference: [NozyWallet MULTISIG_DESIGN](https://github.com/LEONINE-DAO/Nozy-wall
 ## Security rules
 
 1. **Never** call `http://127.0.0.1:3000` companion API from a public website — it grants full wallet control to whoever holds the API key.
-2. Treat connected `orchard_ua` as identity hint until signed attestations ship (Phase 1).
-3. Shielded-only: reject transparent `t1` addresses for treasury and payouts.
-4. Do not log seeds, PCZT bytes, or API keys.
+2. Treat connected `shielded_ua` as identity hint until signed attestations ship (Phase 1).
+3. **Ironwood-only:** treasury and payouts must use Ironwood pool notes; block unmigrated Orchard (ZIP 318).
+4. Shielded-only: reject transparent `t1` addresses for treasury and payouts.
+5. Do not log seeds, PCZT bytes, or API keys.
 
 ## ZNS
 

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zcashorg.dev/schema/crosslink-policy.json",
+  "title": "CrosslinkPolicy",
+  "type": "object",
+  "required": ["fund_id", "enabled"],
+  "properties": {
+    "fund_id": { "type": "string" },
+    "enabled": { "type": "boolean" },
+    "max_stake_percent": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "delegate_to": { "type": "string" },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": false
+}

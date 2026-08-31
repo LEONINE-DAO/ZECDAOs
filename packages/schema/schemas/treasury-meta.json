@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zcashorg.dev/schema/treasury-meta.json",
+  "title": "TreasuryMeta",
+  "type": "object",
+  "required": ["fund_id", "balance_zatoshis", "balance_source"],
+  "properties": {
+    "fund_id": { "type": "string" },
+    "receive_ua": { "type": "string" },
+    "balance_zatoshis": { "type": "integer", "minimum": 0 },
+    "balance_source": {
+      "enum": ["manual", "indexer", "contract", "unconfigured"]
+    },
+    "on_chain_treasury_ref": { "type": "string" },
+    "gleyo_allocated_zatoshis": { "type": "integer", "minimum": 0 },
+    "gleyo_deposit_ua": { "type": "string" },
+    "last_synced_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

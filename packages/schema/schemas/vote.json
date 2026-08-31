@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zcashorg.dev/schema/vote.json",
+  "title": "Vote",
+  "type": "object",
+  "required": ["id", "proposal_id", "member_id", "choice", "weight", "voted_at"],
+  "properties": {
+    "id": { "type": "string" },
+    "proposal_id": { "type": "string" },
+    "member_id": { "type": "string" },
+    "choice": { "enum": ["yes", "no", "abstain"] },
+    "weight": { "type": "integer", "minimum": 0 },
+    "attestation": {
+      "type": "object",
+      "properties": {
+        "scheme": { "type": "string" },
+        "message": { "type": "string" },
+        "signature": { "type": "string" },
+        "address": { "type": "string" }
+      }
+    },
+    "zk_proof": { "type": "string" },
+    "on_chain_vote_id": { "type": "string" },
+    "voted_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

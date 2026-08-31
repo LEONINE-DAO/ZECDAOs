@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zcashorg.dev/schema/proposal.json",
+  "title": "Proposal",
+  "type": "object",
+  "required": [
+    "id",
+    "fund_id",
+    "proposal_type",
+    "title",
+    "description",
+    "status",
+    "created_by_member_id",
+    "execution_status",
+    "payload"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "fund_id": { "type": "string" },
+    "proposal_type": {
+      "enum": [
+        "general",
+        "spend_intent",
+        "member_add",
+        "member_remove",
+        "role_change",
+        "policy_change",
+        "treasury_address",
+        "crosslink_policy",
+        "constitution_amend",
+        "gleyo_link",
+        "gleyo_budget_allocate",
+        "gleyo_program_approve"
+      ]
+    },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "status": {
+      "enum": [
+        "draft",
+        "active",
+        "passed",
+        "rejected",
+        "expired",
+        "cancelled",
+        "executed"
+      ]
+    },
+    "created_by_member_id": { "type": "string" },
+    "opens_at": { "type": "string", "format": "date-time" },
+    "closes_at": { "type": "string", "format": "date-time" },
+    "execution_status": {
+      "enum": ["not_applicable", "pending", "completed", "failed"]
+    },
+    "payload": { "type": "object" },
+    "on_chain_proposal_id": { "type": "string" },
+    "proposal_hash": { "type": "string" },
+    "tally": {
+      "type": "object",
+      "properties": {
+        "yes": { "type": "integer" },
+        "no": { "type": "integer" },
+        "abstain": { "type": "integer" },
+        "eligible_power": { "type": "integer" },
+        "turnout_percent": { "type": "number" }
+      }
+    }
+  },
+  "additionalProperties": false
+}

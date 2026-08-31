@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zcashorg.dev/schema/governance-config.json",
+  "title": "GovernanceConfig",
+  "type": "object",
+  "required": [
+    "fund_id",
+    "quorum_percent",
+    "pass_threshold_percent",
+    "voting_period_secs",
+    "execution_delay_secs",
+    "proposal_policy",
+    "allow_abstain",
+    "voting_power_mode"
+  ],
+  "properties": {
+    "fund_id": { "type": "string" },
+    "quorum_percent": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "pass_threshold_percent": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "voting_period_secs": { "type": "integer", "minimum": 1 },
+    "execution_delay_secs": { "type": "integer", "minimum": 0 },
+    "min_voters": { "type": "integer", "minimum": 0 },
+    "proposal_policy": {
+      "enum": ["any_member", "admins_only", "owners_only"]
+    },
+    "allow_abstain": { "type": "boolean" },
+    "voting_power_mode": { "enum": ["one_member_one_vote"] }
+  },
+  "additionalProperties": false
+}
