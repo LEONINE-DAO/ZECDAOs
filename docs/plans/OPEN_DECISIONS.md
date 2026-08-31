@@ -1,61 +1,66 @@
 # Open decisions
 
-Living document. Resolve items here before locking architecture and starting implementation.
+Living document. Resolve items here before locking implementation.
 
-## Blockers (need input)
+## OD-001 recommendation — Hybrid C + zk-CosmWasm
 
-### OD-001: Smart contract target
+**Status:** Recommended — pending team confirmation
 
-**Status:** Blocked — awaiting spec from team
+**Problem:** Zcash L1 has no general smart-contract VM. Zcashorg needs members, proposals, votes, and enforceable `spend_intent` without putting treasury balances on a transparent ledger.
 
-**Question:** What is the smart contract execution environment?
+**Recommended lock:**
 
-- ZSA / Orchard program on Zcash?
-- Companion chain (CosmWasm, custom L1)?
-- Hybrid with off-chain coordinator?
+| Decision | Resolution |
+|----------|------------|
+| **OD-001** Contract target | **zk-CosmWasm** on a companion CosmWasm chain (Proof VM) — not Zcash L1 |
+| **OD-002** On-chain vs off-chain | **On-chain:** membership rules, proposal lifecycle, tally, execution gate. **Off-chain:** descriptions, avatars, email invites, activity feeds |
+| **OD-003** Custody | **Hybrid:** ZEC stays in Orchard notes; contract authorizes spends; Nozy executes via PCZT / multisig |
+| **OD-004** Coordinator | **Retained** for UX/metadata — not sole source of truth for governance pass/fail |
 
-**Needed:** VM, language, deployment network, audit timeline.
+**Why zk-CosmWasm (not coordinator-only):**
 
----
+- Governance pass/fail is authoritative on-chain — harder to forge than trusting API alone
+- ZK proofs support private ballots and eligibility without publishing full UAs on explorers
+- `spend_intent` becomes an execution gate: contract `pending` → Nozy pays → proof → `executed`
+- Shielded ZEC never moves to the CosmWasm chain — money stays on Zcash L1 via Nozy
 
-### OD-002: On-chain vs off-chain state
+**Still to confirm:** companion chain identity, ZK circuit scope (eligibility vs private ballot), contract audit timeline, Nozy zk-cosmwasm proof POST upstream fixtures.
 
-**Status:** Blocked — depends on OD-001
-
-**Question:** What must be enforced on-chain vs stored in a coordinator / indexer?
-
-| Concern | On-chain candidate | Off-chain candidate |
-|---------|-------------------|---------------------|
-| Membership roster | ? | ? |
-| Voting / tally | ? | ? |
-| Treasury custody | ? | ? |
-| Proposal metadata | ? | ? |
-| Spend execution | ? | ? |
+References: [NozyWallet `tools/zk-cosmwasm-upstream`](https://github.com/LEONINE-DAO/Nozy-wallet/tree/master/tools/zk-cosmwasm-upstream), [`tools/vote-sdk`](https://github.com/LEONINE-DAO/Nozy-wallet/tree/master/tools/vote-sdk).
 
 ---
 
-### OD-003: Custody model
+## Entity → layer mapping
 
-**Status:** Blocked — depends on OD-001
-
-**Options:**
-
-1. **Deferred (Phase 0)** — proposals describe spend intent only; no automatic execution
-2. **PCZT co-sign** — reuse NozyWallet multisig workflow (off-chain policy)
-3. **Contract-held treasury** — funds locked in on-chain vault
-4. **Hybrid** — contract rules + wallet co-sign for Orchard spends
-
-**Prior choice:** defer custody execution in Phase 0 (confirmed).
+| Entity / concern | Coordinator (Postgres) | zk-CosmWasm contract | NozyWallet |
+|------------------|------------------------|----------------------|------------|
+| **Fund** | slug, display_name, description, zns_name, Gleyo link | fund registry hash, governance config, `on_chain_id` | treasury UA (Orchard) |
+| **Member** | display_name, invite flow | member commitment (hash), role, voting_power, status | `orchard_ua` via connect |
+| **Invite** | token, expiry, delivery | — (accept writes commitment on-chain) | accept with connected UA |
+| **GovernanceConfig** | UI cache | authoritative quorum, threshold, voting_period | — |
+| **Proposal** | title, description, rich payload | id, type hash, status, tally, execution gate | — |
+| **Vote** | — | tally input (ZK proof or signed eligibility) | `zcash_signMessage` or ZK submit |
+| **SpendIntent** | recipient, memo in coordinator | approved spend hash, amount cap, `execution_status` | shielded send / PCZT |
+| **TreasuryMeta** | balance cache | execution gate only (no ZEC on CosmWasm) | sync, send, witness |
+| **FundEvent** | activity feed | indexer events mirrored | txid on execute |
+| **Gleyo** | `gleyo_community_id`, allocation txids | optional pass marker for budget allocate | ZEC to Gleyo deposit |
 
 ---
 
-### OD-004: Coordination layer
+## Blockers (need confirmation)
 
-**Status:** Leaning self-hosted coordinator — may change with contract
+### OD-001a: Companion chain
 
-**Prior choice:** self-hosted API per org (or future hosted SaaS).
+Which CosmWasm chain hosts Zcashorg governance contracts? (devnet, Juno testnet, dedicated app chain, other)
 
-**Reopen if:** contract-primary path makes coordinator optional (indexer only).
+### OD-001b: ZK vote scope
+
+- **Eligibility-only:** prove membership; vote choice may be public on-chain
+- **Private ballot:** full vote-sdk-style shielded voting (higher complexity)
+
+### OD-005: Nozy proof glue
+
+Timeline for end-to-end zk proof POST from Nozy → CosmWasm verify (upstream fixtures).
 
 ---
 
@@ -63,41 +68,31 @@ Living document. Resolve items here before locking architecture and starting imp
 
 ### OD-100: Target repo
 
-**Decision:** [LEONINE-DAO/Zcashorg](https://github.com/LEONINE-DAO/Zcashorg)
-
-**Date:** 2026-08-30
-
----
+**Decision:** [LEONINE-DAO/Zcashorg](https://github.com/LEONINE-DAO/Zcashorg) — **Date:** 2026-08-30
 
 ### OD-101: NozyWallet relationship
 
-**Decision:** Standalone dapp repo; first-class NozyWallet dapp via browser extension provider (not embedded in wallet core).
-
-**Date:** 2026-08-30
-
----
+**Decision:** Standalone dapp; extension provider connect (not embedded in wallet core). — **Date:** 2026-08-30
 
 ### OD-102: Phase 0 scope
 
-**Decision:** Data models + planning docs first. Custody execution deferred. Smart contract approach not set in stone.
+**Decision:** Data models + planning docs first; custody execution phased. — **Date:** 2026-08-30
 
-**Date:** 2026-08-30
+### OD-103: Fund types
 
----
-
-### OD-103: Fund types (product)
-
-**Decision:** Support `family`, `business`, `investment_club`, `community` fund types in domain model.
-
-**Date:** 2026-08-30
-
----
+**Decision:** `family`, `business`, `investment_club`, `community`. — **Date:** 2026-08-30
 
 ### OD-104: Governance defaults
 
-**Decision:** Default quorum 40%, pass threshold 67% yes/(yes+no), 7-day voting period, one-member-one-vote in Phase 0.
+**Decision:** quorum 40%, pass threshold 67%, 7-day voting, one-member-one-vote in Phase 0. — **Date:** 2026-08-30
 
-**Date:** 2026-08-30
+### OD-105: Gleyo integration
+
+**Decision:** Ecosystem integration — Zcashorg governs treasury; [Gleyo](https://github.com/gilmorre/gleyo-Zechub-) handles quests and contributor payouts. See [GLEYO_INTEGRATION.md](./GLEYO_INTEGRATION.md). — **Date:** 2026-08-31
+
+### OD-106: Execution pattern (recommended)
+
+**Decision:** Hybrid C — zk-CosmWasm governance + coordinator UX + Nozy shielded ZEC. — **Date:** 2026-08-31 (pending confirm)
 
 ---
 
@@ -105,4 +100,4 @@ Living document. Resolve items here before locking architecture and starting imp
 
 1. Add outcome under **Decided** with date and rationale.
 2. Update [ARCHITECTURE.md](./ARCHITECTURE.md) and [ROADMAP.md](./ROADMAP.md).
-3. Close or reference a GitHub issue if one exists.
+3. Close or reference a GitHub issue.

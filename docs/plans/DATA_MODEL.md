@@ -8,7 +8,7 @@
 - **Time:** ISO-8601 UTC
 - **Amounts:** `zatoshis` as `u64` (1 ZEC = 100_000_000 zatoshis)
 - **Network:** `mainnet` | `testnet`
-- **Chain anchors** (nullable until contract spec): `on_chain_id`, `txid`, `block_height`
+- **Chain anchors:** `on_chain_id`, `txid`, `block_height`, `member_commitment`, `proposal_hash`, `zk_proof` (see [ARCHITECTURE.md](./ARCHITECTURE.md))
 
 ## Entity relationships
 
@@ -42,7 +42,10 @@ Org / DAO / family group.
 | `status` | enum | yes | `active`, `archived` |
 | `zns_name` | string | no | e.g. `smith.zcash` |
 | `network` | enum | yes | `mainnet`, `testnet` |
-| `on_chain_id` | string | no | Contract fund instance id |
+| `on_chain_id` | string | no | CosmWasm fund registry id |
+| `gleyo_community_id` | string | no | Linked Gleyo community |
+| `gleyo_community_url` | string | no | |
+| `gleyo_linked_at` | datetime | no | |
 | `created_by_member_id` | string | yes | Bootstrap member |
 | `created_at` | datetime | yes | |
 | `updated_at` | datetime | yes | |
@@ -80,7 +83,8 @@ One per fund. DAO DAO–style parameters.
 | `status` | enum | yes | `pending`, `active`, `removed` |
 | `voting_power` | u32 | yes | Default 1 |
 | `invited_by` | string | no | Member id |
-| `on_chain_member_id` | string | no | Contract member id |
+| `on_chain_member_id` | string | no | CosmWasm member record id |
+| `member_commitment` | string | no | Hash of UA + fund (on-chain; full UA may stay off explorer) |
 | `joined_at` | datetime | no | |
 
 **Uniqueness:** `(fund_id, orchard_ua)` where `status != removed`.
@@ -145,7 +149,8 @@ Metadata and balance tracking. **No custody enforcement in Phase 0.**
 | `closes_at` | datetime | no | |
 | `execution_status` | enum | yes | `not_applicable`, `pending`, `completed`, `failed` |
 | `payload` | JSON | yes | Type-specific |
-| `on_chain_proposal_id` | string | no | |
+| `on_chain_proposal_id` | string | no | CosmWasm proposal id — authoritative pass/fail |
+| `proposal_hash` | string | no | Hash for SpendIntent execution proof |
 | `tally` | object | no | Cached: `{ yes, no, abstain, eligible_power, turnout_percent }` |
 
 ### proposal_type values
@@ -160,6 +165,9 @@ Metadata and balance tracking. **No custody enforcement in Phase 0.**
 | `policy_change` | Update GovernanceConfig | Off-chain / contract TBD |
 | `treasury_address` | Set receive UA | Off-chain / contract TBD |
 | `crosslink_policy` | Staking policy placeholder | Deferred |
+| `gleyo_link` | Link Gleyo community | Off-chain / contract marker |
+| `gleyo_budget_allocate` | Send ZEC to Gleyo community wallet | After pass + ZEC transfer |
+| `gleyo_program_approve` | Approve quest program cap | Policy metadata |
 
 ### Tally / pass logic
 
@@ -185,7 +193,7 @@ Embedded in `Proposal.payload` when `proposal_type = spend_intent`.
 }
 ```
 
-**Reserved (Phase 3+):** `pczt_ref`, `txid`, `execution_member_id`, `contract_execution_hash`
+**Reserved (Phase 3+):** `pczt_ref`, `txid`, `execution_member_id`, `payment_proof`, `contract_execution_hash`, `contract_execution_hash`
 
 ---
 
@@ -198,8 +206,9 @@ Embedded in `Proposal.payload` when `proposal_type = spend_intent`.
 | `member_id` | string | yes | |
 | `choice` | enum | yes | `yes`, `no`, `abstain` |
 | `weight` | u32 | yes | Snapshot at vote time |
-| `attestation` | object | no | `{ message, signature_hex, scheme: "nozy-sm-v1" }` |
-| `on_chain_vote_id` | string | no | |
+| `attestation` | object | no | `zcash_signMessage` (Phase 1) or eligibility proof |
+| `zk_proof` | string | no | vote-sdk-style private ballot or eligibility proof (Phase 1b+) |
+| `on_chain_vote_id` | string | no | CosmWasm vote record |
 | `voted_at` | datetime | yes | |
 
 **Uniqueness:** `(proposal_id, member_id)`.

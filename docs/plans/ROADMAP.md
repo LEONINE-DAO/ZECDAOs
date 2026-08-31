@@ -1,114 +1,84 @@
 # Roadmap
 
-**Status:** Draft — phases may shift when smart contract spec lands. See [OPEN_DECISIONS.md](./OPEN_DECISIONS.md).
+**Status:** Hybrid C + zk-CosmWasm recommended. See [OPEN_DECISIONS.md](./OPEN_DECISIONS.md).
 
 ## Phase summary
 
-| Phase | Name | Deliverable | Blocked by |
-|-------|------|-------------|------------|
-| **0a** | Planning | `docs/plans/*`, domain model | — |
-| **0b** | Architecture lock | `ARCHITECTURE.md` finalized, `packages/schema` | Smart contract spec (OD-001) |
-| **1** | Backend | Coordinator and/or contract client + adapter | Architecture decision |
-| **2** | Web dapp | UI: create fund, invite, propose, vote + Nozy connect | Backend adapter |
-| **3** | Treasury | Balance sync (indexer / UFVK opt-in) + spend execution | Custody model (OD-003) |
-| **4** | Crosslink | Vault staking proposals | Crosslink mainnet |
+| Phase | Name | Deliverable |
+|-------|------|-------------|
+| **0a** | Planning | `docs/plans/*`, domain model, OD-001 recommendation |
+| **0–1** | Coordinator MVP | Postgres `/v1`, invites, UI metadata, Nozy connect |
+| **1b** | zk-CosmWasm | Member commitments, proposal + vote finalize on companion chain |
+| **2** | Web dapp | `HybridBackend`, fund dashboard, propose/vote |
+| **3** | Treasury execution | `spend_intent` + Nozy send + payment proof → `executed` |
+| **3b** | Gleyo | `gleyo_budget_allocate` after on-chain pass |
+| **4** | Crosslink | Vault staking proposals |
 
 ---
 
 ## Phase 0a — Planning (current)
 
-**Goal:** Shared understanding of what we build.
-
 - [x] Bootstrap repo with planning docs
 - [x] Define portable data model
-- [x] Document open decisions
-- [ ] Receive smart contract spec from team
-- [ ] Lock architecture (Phase 0b)
-
-**Out of scope:** code, contracts, production custody.
-
----
-
-## Phase 0b — Architecture lock
-
-**Goal:** Choose execution layer and repo structure.
-
-- [ ] Resolve OD-001 through OD-003 in [OPEN_DECISIONS.md](./OPEN_DECISIONS.md)
-- [ ] Finalize [ARCHITECTURE.md](./ARCHITECTURE.md)
-- [ ] Add `packages/schema` JSON Schema from [DATA_MODEL.md](./DATA_MODEL.md)
-- [ ] Open GitHub issues for Phase 1 workstreams
+- [x] OD-001 recommendation (Hybrid C + zk-CosmWasm)
+- [x] Gleyo ecosystem integration doc
+- [ ] Confirm OD-001 companion chain + ZK scope
+- [ ] Add `packages/schema` JSON Schema
 
 ---
 
-## Phase 1 — Backend
+## Phase 0–1 — Coordinator MVP
 
-**Goal:** Persist and query fund state.
-
-**If coordinator path:**
+Ship fast while contracts are in development. Coordinator is **not** sole source of truth for governance once Phase 1b lands.
 
 - Postgres migrations
-- REST `/v1` API (funds, members, invites, proposals, votes, treasury, events)
-- Fund API key auth; invite token flow
-- Proposal finalize + tally cron
+- REST `/v1` (metadata, invites, feeds, treasury cache)
+- Nozy extension connect
+- Proposal/vote UI (coordinator tally until contract indexer)
 
-**If contract path:**
+---
 
-- Contract deploy to testnet
-- Indexer for on-chain events → domain model
-- `ContractBackend` adapter
+## Phase 1b — zk-CosmWasm
 
-**If hybrid:** both, with clear source of truth per entity field.
+- Deploy contracts to testnet (companion chain TBD)
+- Fund registry, member commitments, proposal lifecycle, vote tally
+- Indexer → domain model
+- ZK eligibility proofs (vote-sdk patterns) or signed attestations
 
 ---
 
 ## Phase 2 — Web dapp
 
-**Goal:** DAO DAO–style UX for Zcash orgs.
-
-- Next.js app under `apps/web`
-- NozyWallet extension connect ([NOZY_INTEGRATION.md](./NOZY_INTEGRATION.md))
-- Fund dashboard, member list, proposal create/vote
-- Public fund profile by slug
+- Next.js `apps/web`
+- `HybridBackend` adapter
+- Public fund page (outcomes without full payment graph)
 
 ---
 
-## Phase 3 — Treasury and execution
+## Phase 3 — Treasury execution
 
-**Goal:** Move from planning spends to executing them.
+- Treasury balance watcher (LWD / UFVK opt-in)
+- Contract execution gate → Nozy PCZT/send
+- Payment proof → proposal `executed` + `txid`
 
-- Treasury balance watcher (LWD / indexer; UFVK disclosure opt-in)
-- Approved `spend_intent` → execution path:
-  - PCZT co-sign via NozyWallet, and/or
-  - Contract vault payout
-- Record `txid` on proposal payload
+---
 
-**Requires:** custody RFC + security review.
+## Phase 3b — Gleyo
+
+- On-chain pass for `gleyo_budget_allocate`
+- ZEC transfer to Gleyo deposit; audit in FundEvent
 
 ---
 
 ## Phase 4 — Crosslink
 
-**Goal:** Optional idle-ZEC staking for org treasuries.
-
-- `crosslink_policy` proposal type enabled
-- Integrate with NozyWallet Crosslink APIs when mainnet ships
-- Respect `max_stake_percent` and unbonding delays
+- `crosslink_policy` proposals when Crosslink mainnet ships
 
 ---
 
-## NozyWallet ecosystem
+## Success metrics
 
-| Milestone | Where |
-|-----------|-------|
-| List Zcashorg as featured dapp | NozyWallet landing / docs (issue in Nozy-wallet repo) |
-| Vote attestations | `zcash_signMessage` when account support allows |
-| Spend execution | PCZT co-sign per NozyWallet MULTISIG_DESIGN |
-
----
-
-## Success metrics (draft)
-
-- Org created and first member invited end-to-end
-- Proposal created, voted, finalized with correct tally
-- Nozy connect works on mainnet test flow
-- (Phase 3+) Approved spend broadcasts and records txid
+- Fund created + member invited end-to-end
+- Proposal voted; pass/fail matches contract (Phase 1b+)
+- Approved spend executes in Orchard with recorded txid (Phase 3)
+- Gleyo budget allocation after governance pass (Phase 3b)

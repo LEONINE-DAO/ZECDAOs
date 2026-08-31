@@ -1,54 +1,73 @@
 # Architecture
 
-**Status:** Draft — execution layer **not locked**. See [OPEN_DECISIONS.md](./OPEN_DECISIONS.md).
+**Status:** Recommended — **Hybrid C** (zk-CosmWasm + coordinator + Nozy). Pending OD-001 confirm. See [OPEN_DECISIONS.md](./OPEN_DECISIONS.md).
 
 ## Overview
 
-Zcashorg is a web dapp that lets users create shielded ZEC orgs with governance (members, proposals, votes, treasury). It integrates with **NozyWallet** as the wallet surface.
+Zcashorg is a web dapp for shielded ZEC orgs: members, proposals, votes, treasury actions. It integrates with **NozyWallet** for shielded money and **zk-CosmWasm** on a companion chain for enforceable governance — without putting ZEC balances on a transparent ledger.
 
-Unlike [DAO DAO](https://daodao.zone) on CosmWasm, Zcash does not have general-purpose smart contracts on mainnet today. A **smart contract approach is in progress** for this project — the split between on-chain enforcement and off-chain coordination is TBD.
+**Three layers:**
 
-## High-level diagram (current)
+```
+Zcashorg web UI
+      │
+      ├─► Coordinator (Postgres)     metadata, feeds, invites, notifications
+      │
+      ├─► zk-CosmWasm contracts      membership, proposals, tally, pass/fail, execution gate
+      │
+      └─► NozyWallet                 shielded ZEC, sign votes, execute spends
+```
+
+## What zk-CosmWasm solves
+
+| Zcashorg need | Solution |
+|---------------|----------|
+| Members, roles, invites | Member commitments on contract; invites in coordinator |
+| Proposals and votes | Authoritative tally and pass/fail on CosmWasm |
+| `spend_intent` | Contract execution gate → Nozy pays in Orchard → proof → `executed` |
+| Privacy | ZK eligibility / private ballot without public UA ledger |
+| `on_chain_*` fields | Real contract anchors |
+
+**Does not solve alone:** treasury balance sync (LWD/indexer), pure Zcash-only governance stack, Crosslink staking, full E2E until Nozy proof glue ships.
+
+## System diagram
 
 ```mermaid
 flowchart TB
-  subgraph zcashorg [Zcashorg]
-    WebUI[Web UI]
-    Schema[packages/schema]
-    Adapter[Backend adapter]
-    Backend[Coordinator and/or Contract client]
-  end
+  WebUI[Zcashorg web UI]
 
-  subgraph nozy [NozyWallet]
-    Ext[Browser extension provider]
-  end
+  WebUI --> Coordinator[Coordinator Postgres]
+  WebUI --> Contracts[zk-CosmWasm contracts]
+  WebUI --> Nozy[NozyWallet extension]
 
-  subgraph execution [Execution layer TBD]
-    Contract[Smart contract]
-    Coordinator[Optional coordinator API]
-    Indexer[Optional chain indexer]
-  end
+  Coordinator -->|metadata invites feeds| WebUI
+  Contracts -->|membership proposals tally| WebUI
+  Nozy -->|shielded ZEC votes spends| WebUI
 
-  WebUI --> Schema
-  WebUI --> Adapter
-  Adapter --> Backend
-  Backend --> Contract
-  Backend -.-> Coordinator
-  Backend -.-> Indexer
-  WebUI -->|eth_requestAccounts| Ext
+  Contracts -.->|execution gate| Nozy
+  Nozy --> ZcashL1[Zcash L1 Orchard]
+  Contracts --> CosmWasm[Companion CosmWasm chain]
 ```
 
-## Execution-layer options
+## Execution patterns (reference)
 
-| Pattern | On-chain | Off-chain | Fit |
-|---------|----------|-----------|-----|
-| **A — Coordinator only** | ZEC in shared UA / manual treasury | API + DB: members, votes, proposals | Fastest MVP; no contract VM |
-| **B — Contract-primary** | Membership, votes, treasury rules | Indexer + UI cache | When contract target ships |
-| **C — Hybrid** | Treasury + critical state on-chain | Metadata, notifications, privacy UX | Balance of enforcement + UX |
+| Pattern | On-chain | Off-chain | Notes |
+|---------|----------|-----------|-------|
+| A — Coordinator only | — | Everything | Fast MVP; trust API |
+| B — Contract-primary | Governance rules | UI cache | No coordinator |
+| **C — Hybrid** ★ | Membership, proposals, tally, execution gate | Metadata, invites, feeds | **Recommended** |
 
-**Current stance:** design portable [data models](./DATA_MODEL.md) and a **backend adapter** so the UI does not depend on which pattern wins.
+## App flows
 
-## Backend adapter (planned)
+| Step | Behavior |
+|------|----------|
+| Create fund | Connect Nozy → UI + register fund on contract |
+| Invite member | Invite link → accept with UA → member commitment on-chain |
+| Propose spend | Proposal on contract + metadata in coordinator |
+| Vote | ZK proof or signed attestation → contract tallies → pass/fail authoritative |
+| Execute | Treasurer runs Execute → Nozy shielded tx → optional payment proof → `executed` + `txid` |
+
+## Backend adapter
 
 ```typescript
 interface OrgBackend {
@@ -59,41 +78,49 @@ interface OrgBackend {
   castVote(proposalId: string, vote: CastVoteInput): Promise<Vote>;
   finalizeProposal(proposalId: string): Promise<Proposal>;
   getTreasury(fundId: string): Promise<TreasuryMeta>;
-  // executeProposal — added once custody path is known
+}
+
+interface HybridBackend extends OrgBackend {
+  submitVoteProof(proposalId: string, proof: ZkVoteProof): Promise<Vote>;
+  executeSpendIntent(proposalId: string, paymentProof?: PaymentProof): Promise<Proposal>;
+  getExecutionGate(proposalId: string): Promise<{ may_execute: boolean }>;
 }
 ```
 
-Implementations (pick after OD-001 resolved):
+Implementations:
 
-- `CoordinatorBackend` — REST + Postgres
-- `ContractBackend` — RPC + indexer
-- `HybridBackend` — both
+- `CoordinatorBackend` — Phase 0–1 MVP
+- **`HybridBackend`** — recommended production path
+- `ContractBackend` — indexer-only read mode
 
-## Planned repo layout
+## Repo layout
 
 ```
 Zcashorg/
-├── packages/
-│   ├── schema/              # Domain models + JSON Schema
-│   └── sdk/                 # TS client for backend adapter
-├── services/
-│   ├── coordinator/         # Optional — if hybrid/off-chain
-│   └── indexer/               # Optional — if contract-primary
-├── contracts/                 # TBD — smart contract source
-├── apps/
-│   └── web/                 # Dapp UI
-└── docs/plans/              # This folder
+├── packages/schema/
+├── packages/sdk/
+├── services/coordinator/      # Metadata, invites, feeds
+├── services/indexer/          # CosmWasm events → domain model
+├── contracts/                 # zk-CosmWasm: fund, member, proposal, vote
+├── apps/web/
+└── docs/plans/
 ```
 
-## Security notes
+## Gleyo ecosystem
 
-- Public web dapp must **not** call NozyWallet localhost companion REST (full wallet control).
-- Use extension provider for connect / sign / send only.
-- Fund API keys and invite tokens: hash at rest; short TTL on invites.
-- Custody and UFVK disclosure require a dedicated security RFC before production.
+Zcashorg governs treasury allocations; [Gleyo](https://github.com/gilmorre/gleyo-Zechub-) runs quests and payouts. Budget moves to Gleyo after on-chain `gleyo_budget_allocate` pass. See [GLEYO_INTEGRATION.md](./GLEYO_INTEGRATION.md).
+
+## Security
+
+- Public web dapp must **not** call NozyWallet localhost companion REST.
+- Extension provider for connect / sign / send only.
+- ZEC never custodied on CosmWasm chain.
+- Custody and UFVK disclosure require security RFC before production.
 
 ## Related
 
+- [OPEN_DECISIONS.md](./OPEN_DECISIONS.md) — OD-001 entity mapping
 - [DATA_MODEL.md](./DATA_MODEL.md)
 - [NOZY_INTEGRATION.md](./NOZY_INTEGRATION.md)
+- [GLEYO_INTEGRATION.md](./GLEYO_INTEGRATION.md)
 - [ROADMAP.md](./ROADMAP.md)

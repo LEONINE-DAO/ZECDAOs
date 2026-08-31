@@ -4,7 +4,7 @@ Zcash-native org and treasury dapp — create shielded ZEC groups for family, bu
 
 ## Status
 
-**Planning phase.** The repo is bootstrapped with planning documents. Smart contract and execution-layer details are pending.
+**Planning phase.** Hybrid C architecture recommended: zk-CosmWasm governance + coordinator UX + NozyWallet for shielded ZEC. See [docs/plans/ARCHITECTURE.md](docs/plans/ARCHITECTURE.md).
 
 ## Planning docs
 
@@ -12,10 +12,10 @@ Zcash-native org and treasury dapp — create shielded ZEC groups for family, bu
 |----------|-------------|
 | [docs/plans/README.md](docs/plans/README.md) | Index of all planning artifacts |
 | [docs/plans/DATA_MODEL.md](docs/plans/DATA_MODEL.md) | Domain entities and relationships |
-| [docs/plans/ARCHITECTURE.md](docs/plans/ARCHITECTURE.md) | System design (execution layer TBD) |
+| [docs/plans/ARCHITECTURE.md](docs/plans/ARCHITECTURE.md) | Hybrid C: zk-CosmWasm + coordinator + Nozy |
 | [docs/plans/OPEN_DECISIONS.md](docs/plans/OPEN_DECISIONS.md) | Unresolved choices and blockers |
 | [docs/plans/ROADMAP.md](docs/plans/ROADMAP.md) | Phased delivery plan |
-| [docs/plans/NOZY_INTEGRATION.md](docs/plans/NOZY_INTEGRATION.md) | NozyWallet dapp integration contract |
+| [docs/plans/GLEYO_INTEGRATION.md](docs/plans/GLEYO_INTEGRATION.md) | Gleyo quest/payout ecosystem link |
 
 ## Product goals
 
